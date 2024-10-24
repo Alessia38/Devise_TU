@@ -25,7 +25,6 @@ document.getElementById('currency-form').addEventListener('submit', function(e) 
             document.getElementById('result').innerHTML = `
                 <p>${amount} ${from} = <strong>${result} ${to}</strong></p>
                 <p>Taux de conversion : 1 ${from} = ${rate} ${to}</p>
-                <p>Date du taux de change : ${new Date(date).toLocaleString()}</p>
             `;
         })
         .catch(err => console.error('Error fetching exchange rates:', err));
