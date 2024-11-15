@@ -114,4 +114,3 @@ describe('Tests pour la conversion de devises', function() {
             done();
         }, 100);
     });
-});
