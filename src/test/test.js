@@ -1,5 +1,8 @@
 // src/test/index.test.js
 
+const { JSDOM } = require('jsdom');
+const dom = new JSDOM('<!DOCTYPE html><html><body><form id="currency-form"></form></body></html>');
+global.document = dom.window.document;
 const assert = require('assert');
 const sinon = require('sinon');
 
