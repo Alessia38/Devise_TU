@@ -40,11 +40,19 @@ describe('Tests pour la conversion de devises', function() {
     });
 
     it('devrait intercepter l\'événement de soumission du formulaire', function() {
-        const formSpy = sinon.spy(document.getElementById('currency-form'), 'addEventListener');
-        require('../index'); // Recharger le script pour lier à nouveau les événements
-
-        assert(formSpy.calledWith('submit'), 'L\'événement submit n\'a pas été lié correctement');
-        formSpy.restore();
+        // Créer un formulaire factice
+        const form = document.getElementById('currency-form');
+        
+        // Espionner la méthode addEventListener
+        const spy = sinon.spy(form, 'addEventListener');
+    
+        // Charger à nouveau le script principal pour attacher les événements
+        require('../index'); // Assurez-vous que l'événement est lié ici
+    
+        // Vérifier que addEventListener a bien été appelé pour "submit"
+        assert.strictEqual(spy.calledWith('submit'), true, 'L\'événement submit n\'a pas été lié correctement');
+    
+        spy.restore();
     });
 
     it('devrait récupérer les valeurs du formulaire correctement', function() {
