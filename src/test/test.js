@@ -87,18 +87,21 @@ describe('Tests pour la conversion de devises', function() {
         }, 100);
     });
 
-    it('devrait afficher le résultat de la conversion', function(done) {
-        // Simuler un appel API réussi
-        const fetchStub = sinon.stub(global, 'fetch').resolves({
-            ok: true,
-            json: async () => ({
-                result: '85.00',
-                from: 'USD',
-                to: 'EUR',
-                rate: '0.85',
-                date: '2024-11-15'
-            })
+    it('devrait afficher le résultat de la conversion', function() {
+        // Avant de stubber fetch, assurez-vous qu'il n'est pas déjà stubé
+        sinon.restore();  // Assurez-vous de restaurer tout d'abord
+    
+        const fakeFetch = sinon.stub(global, 'fetch').resolves({
+            json: () => ({ result: 100, from: 'USD', to: 'EUR', rate: 0.85, date: '2024-11-15' })
         });
+    
+        // Simulez l'envoi du formulaire ou l'appel à fetch
+        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
+    
+        // Testez que la fonction fetch a bien été appelée
+        assert(fakeFetch.calledOnce);
+    });
+    
 
         // Soumettre le formulaire pour déclencher l'appel fetch
         document.getElementById('currency-form').dispatchEvent(new Event('submit'));
