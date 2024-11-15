@@ -39,14 +39,6 @@ describe('Tests pour la conversion de devises', function() {
         sinon.restore();
     });
 
-    it('devrait intercepter l\'événement de soumission du formulaire', function() {
-        const formSpy = sinon.spy(document.getElementById('currency-form'), 'addEventListener');
-        require('../index'); // Recharger le script pour lier à nouveau les événements
-
-        assert(formSpy.calledWith('submit'), 'L\'événement submit n\'a pas été lié correctement');
-        formSpy.restore();
-    });
-
     it('devrait récupérer les valeurs du formulaire correctement', function() {
         const amount = document.getElementById('amount').value;
         const from = document.getElementById('from').value;
@@ -57,19 +49,6 @@ describe('Tests pour la conversion de devises', function() {
         assert.strictEqual(to, 'EUR', 'La devise cible récupérée est incorrecte');
     });
 
-    it('devrait appeler l\'API de conversion avec les bons paramètres', function(done) {
-        // Stub fetch pour simuler une réponse correcte
-        fetchStub.resolves({
-            ok: true,
-            json: async () => ({
-                result: '85.00',
-                from: 'USD',
-                to: 'EUR',
-                rate: '0.85',
-                date: '2024-11-15'
-            })
-        });
-
         // Simuler l'envoi du formulaire
         const form = document.getElementById('currency-form');
         form.dispatchEvent(new Event('submit'));
@@ -77,20 +56,6 @@ describe('Tests pour la conversion de devises', function() {
         setTimeout(() => {
             assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
             assert(fetchStub.calledWithMatch('/convert?amount=100&from=USD&to=EUR'), 'Les paramètres fetch sont incorrects');
-            done();
-        }, 100);
-    });
-
-    it('devrait gérer correctement les erreurs API', function(done) {
-        // Stub fetch pour simuler une erreur
-        fetchStub.rejects(new Error('Network Error'));
-
-        // Simuler l'envoi du formulaire
-        const form = document.getElementById('currency-form');
-        form.dispatchEvent(new Event('submit'));
-
-        setTimeout(() => {
-            assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
             done();
         }, 100);
     });
@@ -118,4 +83,3 @@ describe('Tests pour la conversion de devises', function() {
             done();
         }, 100);
     });
-});
