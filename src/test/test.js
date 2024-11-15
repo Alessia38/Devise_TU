@@ -69,52 +69,54 @@ describe('Tests pour la conversion de devises', function() {
         assert.strictEqual(to, 'EUR', 'La devise cible récupérée est incorrecte');
     });
 
-    it('devrait appeler l\'API de conversion avec les bons paramètres', function(done) {
-        // Stub fetch pour simuler une réponse correcte
+    it('devrait appeler l\'API de conversion avec les bons paramètres', async function() {
+        // Stub pour simuler une réponse réussie
         const mockResponse = Promise.resolve({
             ok: true,
-            json: async () => ({
+            json: () => Promise.resolve({
                 result: '85.00',
                 from: 'USD',
                 to: 'EUR',
                 rate: '0.85',
-                date: '2024-11-15'
-            })
+                date: '2024-11-15',
+            }),
         });
         fetchStub.returns(mockResponse);
 
+        // Simuler la soumission du formulaire
         document.getElementById('amount').value = '100';
         document.getElementById('from').value = 'USD';
         document.getElementById('to').value = 'EUR';
+
         document.getElementById('currency-form').dispatchEvent(new Event('submit'));
 
+        // Attendre que l'opération asynchrone soit exécutée
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Vérifier que `fetch` a été appelé une fois
         assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
+
+        // Vérifier que `fetch` a été appelé avec l'URL correcte
         const expectedUrl = '/convert?amount=100&from=USD&to=EUR';
         assert(fetchStub.calledWith(expectedUrl), 'fetch n\'a pas été appelé avec l\'URL attendue');
-
-        // Simuler l'envoi du formulaire
-        const form = document.getElementById('currency-form');
-        form.dispatchEvent(new Event('submit'));
-
-        setTimeout(() => {
-            assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
-            assert(fetchStub.calledWithMatch('/convert?amount=100&from=USD&to=EUR'), 'Les paramètres fetch sont incorrects');
-            done();
-        }, 100);
     });
+});
+    it('devrait gérer correctement les erreurs API', async function() {
+        // Stub pour simuler une erreur réseau
+        fetchStub.returns(Promise.reject(new Error('Network Error')));
 
-    it('devrait gérer correctement les erreurs API', function(done) {
-        // Stub fetch pour simuler une erreur
-        fetchStub.rejects(new Error('Network Error'));
+        // Simuler la soumission du formulaire
+        document.getElementById('amount').value = '100';
+        document.getElementById('from').value = 'USD';
+        document.getElementById('to').value = 'EUR';
 
-        // Simuler l'envoi du formulaire
-        const form = document.getElementById('currency-form');
-        form.dispatchEvent(new Event('submit'));
+        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
 
-        setTimeout(() => {
-            assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
-            done();
-        }, 100);
+        // Attendre que l'opération asynchrone soit exécutée
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Vérifier que `fetch` a été appelé malgré l'erreur
+        assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
     });
 
     it('devrait afficher le résultat de la conversion', function(done) {
@@ -140,4 +142,3 @@ describe('Tests pour la conversion de devises', function() {
             done();
         }, 100);
     });
-});
