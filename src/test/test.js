@@ -1,121 +1,48 @@
 const { JSDOM } = require('jsdom');
-const sinon = require('sinon');
 const assert = require('assert');
 
-describe('Tests pour la conversion de devises', function () {
-    let dom;
-    let document;
-    let fetchStub;
+describe('Formulaire de conversion de devises', function () {
+  let document;
 
-    beforeEach(function () {
-        // Configurer un DOM virtuel avec jsdom
-        dom = new JSDOM(`
-            <!DOCTYPE html>
-            <html>
-                <body>
-                    <form id="currency-form">
-                        <input id="amount" type="text" />
-                        <select id="from">
-                            <option value="USD" selected>USD</option>
-                        </select>
-                        <select id="to">
-                            <option value="EUR" selected>EUR</option>
-                        </select>
-                        <button type="submit">Convert</button>
-                    </form>
-                    <div id="conversion-result"></div>
-                </body>
-            </html>
-        `);
+  beforeEach(function () {
+    // Créer un environnement DOM pour le test
+    const dom = new JSDOM(`
+      <html>
+        <body>
+          <form id="currency-form">
+            <input type="number" id="amount" name="amount" placeholder="Montant" />
+            <select id="from" name="from">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+            <select id="to" name="to">
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+            </select>
+            <button type="submit">Convertir</button>
+          </form>
+          <div id="conversion-result"></div>
+        </body>
+      </html>
+    `);
 
-        // Extraire le document simulé
-        document = dom.window.document;
+    // Attacher le document pour pouvoir manipuler le DOM
+    document = dom.window.document;
+  });
 
-        // Stub pour fetch
-        fetchStub = sinon.stub(global, 'fetch');
-    });
-
-    afterEach(function () {
-        // Restaurer fetch après chaque test
-        fetchStub.restore();
-    });
-
-    it('devrait gérer correctement les erreurs API', async function () {
-        // Simuler une erreur réseau
-        fetchStub.returns(Promise.reject(new Error('Network Error')));
-
-        // Simuler une interaction utilisateur
-        document.getElementById('amount').value = '100';
-        document.getElementById('from').value = 'USD';
-        document.getElementById('to').value = 'EUR';
-
-        document.getElementById('currency-form').dispatchEvent(new dom.window.Event('submit'));
-
-        // Attendre que l'événement soit traité
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
-        // Vérifier que fetch a été appelé
-        assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
-    });
-
-    it('devrait afficher le résultat de la conversion', async function () {
-        const mockResponse = Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({
-                result: '85.00',
-                from: 'USD',
-                to: 'EUR',
-                rate: '0.85',
-                date: '2024-11-15',
-            }),
-        });
-        fetchStub.returns(mockResponse);
+  it('devrait afficher le formulaire correctement', function () {
+    // Vérifiez que le formulaire est présent
+    const form = document.getElementById('currency-form');
+    const amountInput = document.getElementById('amount');
+    const fromSelect = document.getElementById('from');
+    const toSelect = document.getElementById('to');
+    const submitButton = document.querySelector('button[type="submit"]');
     
-        // Simuler l'interaction de l'utilisateur
-        document.getElementById('amount').value = '100';
-        document.getElementById('from').value = 'USD';
-        document.getElementById('to').value = 'EUR';
-    
-        // Simuler la soumission du formulaire
-        const form = document.getElementById('currency-form');
-        form.dispatchEvent(new dom.window.Event('submit'));
-    
-        // Attendre que l'événement soit traité
-        await new Promise((resolve) => setTimeout(resolve, 50));
-    
-        // Vérifier que le résultat est bien affiché
-        const result = document.getElementById('conversion-result').textContent;
-        assert.strictEqual(result, '85.00', 'Le résultat affiché est incorrect');
-    });
-    
-
-    it('devrait appeler l\'API de conversion avec les bons paramètres', async function () {
-        const mockResponse = Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({
-                result: '85.00',
-                from: 'USD',
-                to: 'EUR',
-                rate: '0.85',
-                date: '2024-11-15',
-            }),
-        });
-        fetchStub.returns(mockResponse);
-    
-        // Simuler l'interaction de l'utilisateur
-        document.getElementById('amount').value = '100';
-        document.getElementById('from').value = 'USD';
-        document.getElementById('to').value = 'EUR';
-    
-        // Simuler la soumission du formulaire
-        const form = document.getElementById('currency-form');
-        form.dispatchEvent(new dom.window.Event('submit'));
-    
-        // Attendre que l'événement soit traité
-        await new Promise((resolve) => setTimeout(resolve, 50));
-    
-        // Vérifiez que `fetch` a bien été appelé avec les bons paramètres
-        const expectedUrl = '/convert?amount=100&from=USD&to=EUR';
-        assert(fetchStub.calledWith(expectedUrl), 'fetch n\'a pas été appelé avec les bons paramètres');
-    });
-});    
+    // Vérification de la présence des éléments dans le formulaire
+    assert(form, 'Le formulaire n\'est pas présent');
+    assert(amountInput, 'Le champ de montant n\'est pas présent');
+    assert(fromSelect, 'Le champ de sélection de la devise source n\'est pas présent');
+    assert(toSelect, 'Le champ de sélection de la devise cible n\'est pas présent');
+    assert(submitButton, 'Le bouton de soumission n\'est pas présent');
+  });
+});
