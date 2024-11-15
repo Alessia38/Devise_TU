@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",
-    "test": "mocha test/*.js",
+    "test": "mocha src/test/*.js",
     "start": "node server.js"
   },
   "author": "",
