@@ -36,7 +36,7 @@ describe('Tests pour la conversion de devises', function() {
 
     afterEach(function() {
         // Restaurer fetch après chaque test
-        sinon.restore();
+        fetchStub.restore();
     });
 
     it('devrait intercepter l\'événement de soumission du formulaire', function() {
@@ -71,7 +71,7 @@ describe('Tests pour la conversion de devises', function() {
 
     it('devrait appeler l\'API de conversion avec les bons paramètres', function(done) {
         // Stub fetch pour simuler une réponse correcte
-        fetchStub.resolves({
+        const mockResponse = Promise.resolve({
             ok: true,
             json: async () => ({
                 result: '85.00',
@@ -81,6 +81,16 @@ describe('Tests pour la conversion de devises', function() {
                 date: '2024-11-15'
             })
         });
+        fetchStub.returns(mockResponse);
+
+        document.getElementById('amount').value = '100';
+        document.getElementById('from').value = 'USD';
+        document.getElementById('to').value = 'EUR';
+        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
+
+        assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
+        const expectedUrl = '/convert?amount=100&from=USD&to=EUR';
+        assert(fetchStub.calledWith(expectedUrl), 'fetch n\'a pas été appelé avec l\'URL attendue');
 
         // Simuler l'envoi du formulaire
         const form = document.getElementById('currency-form');
