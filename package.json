@@ -4,6 +4,7 @@
   "description": "Projet web de Bachelor DEV IA.",
   "main": "index.js",
   "scripts": {
+    "build": "webpack --mode production",
     "test": "mocha test/*.js",
     "start": "node server.js"
   },
