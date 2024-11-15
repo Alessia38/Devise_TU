@@ -26,10 +26,13 @@ require('../index'); // Cette ligne va déclencher le code dans index.js
 describe('Tests pour la conversion de devises', function() {
 
     it('devrait intercepter l\'événement de soumission du formulaire', function() {
-        // Espionner la méthode addEventListener pour vérifier qu'elle est bien appelée
-        const formListener = document.getElementById('currency-form').addEventListener;
-        assert(formListener.calledOnce, 'addEventListener n\'a pas été appelé une fois');
+        const spy = sinon.spy(document.getElementById('currency-form'), 'addEventListener');
+        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
+    
+        // Vérifiez que addEventListener a été appelé
+        assert.strictEqual(spy.calledOnce, true);
     });
+    
 
     it('devrait récupérer les valeurs du formulaire correctement', function() {
         // Vérifier les valeurs récupérées du formulaire
