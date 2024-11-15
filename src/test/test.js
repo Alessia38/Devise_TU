@@ -59,7 +59,6 @@ describe('Tests pour la conversion de devises', function () {
     });
 
     it('devrait afficher le résultat de la conversion', async function () {
-        // Simuler une réponse API réussie
         const mockResponse = Promise.resolve({
             ok: true,
             json: () => Promise.resolve({
@@ -71,24 +70,26 @@ describe('Tests pour la conversion de devises', function () {
             }),
         });
         fetchStub.returns(mockResponse);
-
-        // Simuler une interaction utilisateur
+    
+        // Simuler l'interaction de l'utilisateur
         document.getElementById('amount').value = '100';
         document.getElementById('from').value = 'USD';
         document.getElementById('to').value = 'EUR';
-
-        document.getElementById('currency-form').dispatchEvent(new dom.window.Event('submit'));
-
+    
+        // Simuler la soumission du formulaire
+        const form = document.getElementById('currency-form');
+        form.dispatchEvent(new dom.window.Event('submit'));
+    
         // Attendre que l'événement soit traité
         await new Promise((resolve) => setTimeout(resolve, 50));
-
-        // Vérifier que le résultat est affiché
+    
+        // Vérifier que le résultat est bien affiché
         const result = document.getElementById('conversion-result').textContent;
         assert.strictEqual(result, '85.00', 'Le résultat affiché est incorrect');
     });
+    
 
     it('devrait appeler l\'API de conversion avec les bons paramètres', async function () {
-        // Simuler une réponse API réussie
         const mockResponse = Promise.resolve({
             ok: true,
             json: () => Promise.resolve({
@@ -100,19 +101,21 @@ describe('Tests pour la conversion de devises', function () {
             }),
         });
         fetchStub.returns(mockResponse);
-
-        // Simuler une interaction utilisateur
+    
+        // Simuler l'interaction de l'utilisateur
         document.getElementById('amount').value = '100';
         document.getElementById('from').value = 'USD';
         document.getElementById('to').value = 'EUR';
-
-        document.getElementById('currency-form').dispatchEvent(new dom.window.Event('submit'));
-
+    
+        // Simuler la soumission du formulaire
+        const form = document.getElementById('currency-form');
+        form.dispatchEvent(new dom.window.Event('submit'));
+    
         // Attendre que l'événement soit traité
         await new Promise((resolve) => setTimeout(resolve, 50));
-
-        // Vérifier que fetch a été appelé avec les bons paramètres
+    
+        // Vérifiez que `fetch` a bien été appelé avec les bons paramètres
         const expectedUrl = '/convert?amount=100&from=USD&to=EUR';
         assert(fetchStub.calledWith(expectedUrl), 'fetch n\'a pas été appelé avec les bons paramètres');
     });
-});
+});    
