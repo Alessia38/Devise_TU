@@ -1,6 +1,8 @@
-// src/test/index.test.js
-
 const { JSDOM } = require('jsdom');
+const sinon = require('sinon');
+const assert = require('assert');
+
+// Configuration d'un DOM simulé
 const dom = new JSDOM(`
     <!DOCTYPE html>
     <html>
@@ -14,49 +16,38 @@ const dom = new JSDOM(`
         <div id="result"></div>
       </body>
     </html>
-  `);
+`);
+
 global.document = dom.window.document;
 global.window = dom.window;
 global.HTMLElement = dom.window.HTMLElement;
-const assert = require('assert');
-const sinon = require('sinon');
+global.Event = dom.window.Event;
 
-// Simuler le DOM pour exécuter le test en dehors du navigateur (en Node.js)
-global.document = {
-    getElementById: function(id) {
-        if (id === 'currency-form') {
-            return { addEventListener: sinon.spy() };
-        } else if (id === 'amount') {
-            return { value: '100' };
-        } else if (id === 'from') {
-            return { value: 'USD' };
-        } else if (id === 'to') {
-            return { value: 'EUR' };
-        } else if (id === 'result') {
-            return { innerHTML: '' };
-        }
-    }
-};
-
-// Importation du code à tester (index.js)
-require('../index'); // Cette ligne va déclencher le code dans index.js
+// Importer le fichier index.js
+require('../index'); // Charge le script principal pour lier les événements
 
 describe('Tests pour la conversion de devises', function() {
+    let fetchStub;
+
+    beforeEach(function() {
+        // Stub pour simuler fetch avant chaque test
+        fetchStub = sinon.stub(global, 'fetch');
+    });
+
+    afterEach(function() {
+        // Restaurer fetch après chaque test
+        sinon.restore();
+    });
 
     it('devrait intercepter l\'événement de soumission du formulaire', function() {
-        // Créez un espion pour intercepter addEventListener
-        const spy = sinon.spy(document.getElementById('currency-form'), 'addEventListener');
-    
-        // Déclenche l'événement 'submit'
-        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
-    
-        // Vérifiez que addEventListener a bien été appelé une fois
-        assert.strictEqual(spy.calledOnce, true);
+        const formSpy = sinon.spy(document.getElementById('currency-form'), 'addEventListener');
+        require('../index'); // Recharger le script pour lier à nouveau les événements
+
+        assert(formSpy.calledWith('submit'), 'L\'événement submit n\'a pas été lié correctement');
+        formSpy.restore();
     });
-    
 
     it('devrait récupérer les valeurs du formulaire correctement', function() {
-        // Vérifier les valeurs récupérées du formulaire
         const amount = document.getElementById('amount').value;
         const from = document.getElementById('from').value;
         const to = document.getElementById('to').value;
@@ -67,8 +58,8 @@ describe('Tests pour la conversion de devises', function() {
     });
 
     it('devrait appeler l\'API de conversion avec les bons paramètres', function(done) {
-        // Simuler un appel API avec sinon
-        const fetchStub = sinon.stub(global, 'fetch').resolves({
+        // Stub fetch pour simuler une réponse correcte
+        fetchStub.resolves({
             ok: true,
             json: async () => ({
                 result: '85.00',
@@ -79,56 +70,52 @@ describe('Tests pour la conversion de devises', function() {
             })
         });
 
-        // Soumettre le formulaire pour déclencher l'appel fetch
-        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
+        // Simuler l'envoi du formulaire
+        const form = document.getElementById('currency-form');
+        form.dispatchEvent(new Event('submit'));
 
-        // Attendre que la promesse soit résolue
         setTimeout(() => {
-            assert(fetchStub.calledOnce, 'L\'API fetch n\'a pas été appelée');
-            fetchStub.restore(); // Restaurer l'original de fetch
+            assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
+            assert(fetchStub.calledWithMatch('/convert?amount=100&from=USD&to=EUR'), 'Les paramètres fetch sont incorrects');
             done();
         }, 100);
     });
 
     it('devrait gérer correctement les erreurs API', function(done) {
-        // Simuler une erreur d'appel API avec sinon
-        const fetchStub = sinon.stub(global, 'fetch').rejects(new Error('Network response was not ok'));
+        // Stub fetch pour simuler une erreur
+        fetchStub.rejects(new Error('Network Error'));
 
-        // Soumettre le formulaire pour déclencher l'appel fetch
-        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
+        // Simuler l'envoi du formulaire
+        const form = document.getElementById('currency-form');
+        form.dispatchEvent(new Event('submit'));
 
-        // Attendre que l'erreur soit gérée
         setTimeout(() => {
-            assert(fetchStub.calledOnce, 'L\'API fetch n\'a pas été appelée');
-            fetchStub.restore(); // Restaurer l'original de fetch
+            assert(fetchStub.calledOnce, 'fetch n\'a pas été appelé');
             done();
         }, 100);
     });
 
-    it('devrait afficher le résultat de la conversion', function() {
-        // Avant de stubber fetch, assurez-vous qu'il n'est pas déjà stubé
-        sinon.restore();  // Assurez-vous de restaurer tout d'abord
-    
-        const fakeFetch = sinon.stub(global, 'fetch').resolves({
-            json: () => ({ result: 100, from: 'USD', to: 'EUR', rate: 0.85, date: '2024-11-15' })
+    it('devrait afficher le résultat de la conversion', function(done) {
+        // Stub fetch pour simuler une réponse correcte
+        fetchStub.resolves({
+            ok: true,
+            json: async () => ({
+                result: '85.00',
+                from: 'USD',
+                to: 'EUR',
+                rate: '0.85',
+                date: '2024-11-15'
+            })
         });
-    
-        // Simulez l'envoi du formulaire ou l'appel à fetch
-        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
-    
-        // Testez que la fonction fetch a bien été appelée
-        assert(fakeFetch.calledOnce);
-    });
-    
 
-        // Soumettre le formulaire pour déclencher l'appel fetch
-        document.getElementById('currency-form').dispatchEvent(new Event('submit'));
+        // Simuler l'envoi du formulaire
+        const form = document.getElementById('currency-form');
+        form.dispatchEvent(new Event('submit'));
 
-        // Attendre que la promesse soit résolue
         setTimeout(() => {
-            const resultElement = document.getElementById('result').innerHTML;
-            assert(resultElement.includes('100 USD = <strong>85.00 EUR</strong>'), 'Le résultat de la conversion n\'est pas affiché correctement');
-            fetchStub.restore(); // Restaurer l'original de fetch
+            const resultHTML = document.getElementById('result').innerHTML;
+            assert(resultHTML.includes('100 USD = <strong>85.00 EUR</strong>'), 'Le résultat affiché est incorrect');
             done();
         }, 100);
     });
+});
